@@ -37,7 +37,7 @@ bin/kafka-topics.sh --zookeeper localhost:2181 --create --topic testk --partitio
 bin/kafka-topics.sh --zookeeper localhost:2181 --describe --topic testk
 
 ```
-### 4、简单性能测试
+### 简单性能测试
 ```
     bin/kafka-producer-perf-test.sh --topic testk --num-records 100000 --record-size1000 --throughput 2000 --producer-props bootstrap.servers=localhost:9092
     bin/kafka-consumer-perf-test.sh ---bootstrap-server localhost:9092 --topic testk --fetch-size 1048576 --messages 100000 --threads 1
@@ -56,12 +56,12 @@ bin/kafka-topics.sh --zookeeper localhost:2181 --describe --topic testk
 [root@vm-JZ7A72FWtFRk config]# cp server.properties  ../kafka9003.properties
 ```
 
-### 编辑 vim kafka9001.properties   vim kafka9002.properties   vim kafka9002.properties
+### 编辑 vim kafka9001.properties   vim kafka9002.properties   vim kafka9003.properties
  三个属性修改下如下
 broker.id=1  2  3
 listeners=PLAINTEXT://localhost:9092  localhost:9093   localhost:9094
 log.dirs=/tmp/kafka-logs1  kafka-logs2   kafka-logs3
-
+kafka9001.properties 信息如下
 ```
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -171,12 +171,16 @@ Topic: test32	PartitionCount: 3	ReplicationFactor: 2	Configs:
 	Topic: test32	Partition: 0	Leader: 1	Replicas: 1,2	Isr: 1,2
 	Topic: test32	Partition: 1	Leader: 2	Replicas: 2,3	Isr: 2,3
 	Topic: test32	Partition: 2	Leader: 3	Replicas: 3,1	Isr: 3,1
-[root@vm-JZ7A72FWtFRk kafka_2.13-2.7.0]#
-```
+
+//解析
 三个parition在三个不同机器上，Leader代表Broker的id
 Topic: test32	Partition: 0 （分区）	Leader: 1 （Broker的id localhost:9092） Replicas: 1,2 （Partition0在Broker1 和Broker2上）	Isr: 1,2 (Isr同步的副本，高可用，选举，每一个Partition0副本在其他节点Broker有一个是Leader其他不是Leader)
 Topic: test32	Partition: 1 （分区）	Leader: 2 （Broker的id localhost:9093）	Replicas: 2,3 （Partition1在Broker2 和Broker3上）	Isr: 2,3
 Topic: test32	Partition: 2 （分区）	Leader: 3 （Broker的id localhost:9094）	Replicas: 3,1 （Partition2在Broker3 和Broker1上）    Isr: 3,1
+
+Isr这个是重点，后续还需要深入分析
+```
+
 ```
 bin/kafka-console-producer.sh --bootstrap-server localhost:9003 --topic test32
 bin/kafka-console-consumer.sh --bootstrap-server localhost:9001 --topic test32 --from-beginning
