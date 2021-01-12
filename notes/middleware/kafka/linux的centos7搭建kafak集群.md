@@ -57,9 +57,10 @@ bin/kafka-topics.sh --zookeeper localhost:2181 --describe --topic testk
 ```
 
 ### 编辑 vim kafka9001.properties   vim kafka9002.properties   vim kafka9003.properties
- 三个属性修改下如下
+ 四个属性修改下如下
 broker.id=1  2  3
 listeners=PLAINTEXT://localhost:9092  localhost:9093   localhost:9094
+advertised.listeners
 log.dirs=/tmp/kafka-logs1  kafka-logs2   kafka-logs3
 kafka9001.properties 信息如下
 ```
@@ -105,12 +106,12 @@ broker.id=1
 #     listeners = listener_name://host_name:port
 #   EXAMPLE:
 #     listeners = PLAINTEXT://your.host.name:9092
-listeners=PLAINTEXT://localhost:9092
+listeners=PLAINTEXT://114.67.171.251:9093
 
 # Hostname and port the broker will advertise to producers and consumers. If not set,
 # it uses the value for "listeners" if configured.  Otherwise, it will use the value
 # returned from java.net.InetAddress.getCanonicalHostName().
-#advertised.listeners=PLAINTEXT://your.host.name:9092
+advertised.listeners=PLAINTEXT://114.67.171.251:9093
 
 # Maps listener names to security protocols, the default is for them to be the same. See the config documentation for more details
 #listener.security.protocol.map=PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
@@ -140,6 +141,29 @@ log.dirs=/tmp/kafka-logs1
 # the brokers.
 num.partitions=1
 ```
+### kafka listeners 和 advertised.listeners 的区别及应用
+（记得修改配置，不然代码服务会报错：could not be established. Broker may not be available）
+* listeners: 学名叫监听器，其实就是告诉外部连接者要通过什么协议访问指定主机名和端口开放的 Kafka 服务。
+* advertised.listeners：和 listener相比多了个
+* advertised。Advertise的含义表示宣称的、公布的，就是组监听器是 Broker 用于对外发布的。
+#### 只有内网
+比如在公司搭建的 kafka 集群，只有内网中的服务可以用，这种情况下，只需要用 listeners 就行
+```
+listeners=<协议名称>://<内网ip>:<端口>
+listeners=SASL_PLAINTEXT://192.168.0.4:9092
+```
+
+#### 内外网
+在 docker 中或者 在类似阿里云主机上部署 kafka 集群，这种情况下是 需要用到 advertised_listeners。以 docker 为例
+```
+listeners=INSIDE://0.0.0.0:9092,OUTSIDE://<公网 ip>:端口(或者 0.0.0.0:端口)
+advertised.listeners=INSIDE://localhost:9092,OUTSIDE://<宿主机ip>:<宿主机暴露的端口>
+listener.security.protocol.map=INSIDE:SASL_PLAINTEXT,OUTSIDE:SASL_PLAINTEXT
+kafka_inter_broker_listener_name:inter.broker.listener.name=INSIDE
+```
+总结：advertised_listeners 是对外暴露的服务端口，真正建立连接用的是 listeners
+
+
 ### 启动三个kafka
 ```
 ./bin/kafka-server-start.sh kafka9001.properties
@@ -174,7 +198,8 @@ Topic: test32	PartitionCount: 3	ReplicationFactor: 2	Configs:
 
 //解析
 三个parition在三个不同机器上，Leader代表Broker的id
-Topic: test32	Partition: 0 （分区）	Leader: 1 （Broker的id localhost:9092） Replicas: 1,2 （Partition0在Broker1 和Broker2上）	Isr: 1,2 (Isr同步的副本，高可用，选举，每一个Partition0副本在其他节点Broker有一个是Leader其他不是Leader)
+Topic: test32	Partition: 0 （分区）	Leader: 1 （Broker的id localhost:9092） Replicas: 1,2 （Partition0在Broker1 和Broker2上）
+                                                                               Isr: 1,2 (Isr同步的副本，高可用，选举，每一个Partition0副本在其他节点Broker有一个是Leader其他不是Leader)
 Topic: test32	Partition: 1 （分区）	Leader: 2 （Broker的id localhost:9093）	Replicas: 2,3 （Partition1在Broker2 和Broker3上）	Isr: 2,3
 Topic: test32	Partition: 2 （分区）	Leader: 3 （Broker的id localhost:9094）	Replicas: 3,1 （Partition2在Broker3 和Broker1上）    Isr: 3,1
 
