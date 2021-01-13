@@ -141,8 +141,7 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
 ```
 * 项目导入IDEA，使用jdk1.8
-* 项目导入IDEA，使用jdk1.8
-* 项目导入IDEA，使用jdk1.8，
+
 
 ## 进入soul-admin页面
 
