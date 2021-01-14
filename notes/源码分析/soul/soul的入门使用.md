@@ -199,7 +199,7 @@ enable：是否开启，默认为 true 开启。
 ```
 
 
-到这里我们算springclooud接入成功了
+到这里我们算springcloud接入成功了
 
 
 ### 响应式编程
