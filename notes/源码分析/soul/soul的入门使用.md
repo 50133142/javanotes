@@ -149,9 +149,9 @@ spring:
 * sawgger界面：http://localhost:9095/swagger-ui.html
 *
 
-## 搭建自己的网关
 
-###  接入 Spring Cloud 应用，在order-service服务
+
+##  接入把springboot应用，加入soul-admin管理起来
 * 添加依赖
 ```
         <dependency>
@@ -161,15 +161,16 @@ spring:
         </dependency>
 ```
 * 添加配置
+> 注意：context-path和port要修改，不要soul-admin选择器列表找不到
 ```
 soul:
   # Soul 针对 SpringMVC 的配置项，对应 SoulHttpConfig 配置类
   http:
     admin-url: http://127.0.0.1:9095 # Soul Admin 地址
-    context-path: /sb-demo-api # 设置在 Soul 网关的路由前缀，例如说 /order、/product 等等。
+    context-path: /order-service # 设置在 Soul 网关的路由前缀，例如说 /order、/product 等等。
     # 后续，网关会根据该 context-path 来进行路由
-    app-name: sb-demo-service # 应用名。未配置情况下，默认使用 `spring.application.name` 配置项
-    port: 8080 #你本项目的启动端口
+    app-name: order-service # 应用名。未配置情况下，默认使用 `spring.application.name` 配置项
+    port: 8098 #你本项目的启动端口
     full: false   # 设置true 代表代理你的整个服务，false表示代理你其中某几个controller
 ```
 * 代码添加注解：    
@@ -199,10 +200,10 @@ enable：是否开启，默认为 true 开启。
 ```
 
 
-到这里我们算springcloud接入成功了
+到这里我们算springboot接入成功了
 
 
-### 响应式编程
+## 响应式编程
 * 举例了一个例子：我们乘坐同一条线的地铁类比初始化响应式编程（Flux和Mono），每趟车类比数据元素，
   我们乘坐地铁的人不需要关心上下趟车次会发生撞车问题，如果前面一趟车发生事故，或者开慢了，前面的那趟车次会发通知告知后面的车次，从而减慢速度，
   因为每次车之间依次存在相互感应/通知,上一趟车发生事故会及时发出信息告知下一趟车,再传递到后面的地铁车次。响应式编程就是这个逻辑 
