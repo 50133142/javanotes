@@ -51,7 +51,7 @@
 过来三四分钟刷新soul-admin页面，选择器列表：sb-demo-api的信息还在，没有剔除掉，先把问题记录，后续跟源码看为什么？
 
 ###   如下，我们可以针对某个接口配置各种负载均衡策略，控制颗粒很小，
-![](/png/divide.png)
+![divide-rule.png](../soul/png/divide-rule.png "divide-rule")
 
 
 ## soul-bootStrap和springcloud-gateway性能对比
