@@ -1,4 +1,9 @@
-# soul网关转发和springcloud-gateway性能对比
+# （二）soul网关转发和springcloud-gateway性能对比
+
+## 目标
+ * soul网关转发
+ * soul-bootStrap和springcloud-gateway性能对比
+
 
 ## soul网关转发
 接着上篇内容，我们使用springboot接入soul
@@ -146,8 +151,9 @@ C:\Users\v-yanb07>
 
 ```
 ###  压测分析
- * 直连单体的RPS最高，
+ * 直连单体服务的RPS最高，
  * 使用springcloud-gateway的RPS最差，
  * soul-bootstrap性能是springcloud-gateway的1.75倍，明显优于gateway，后需分析为什么性能高于gateway
+ * soul-bootstrap性能是单体服务的45%，后续需要分析soul损坏的点在哪里
 
 

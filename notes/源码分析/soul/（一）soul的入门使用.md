@@ -1,4 +1,11 @@
-# soul的入门使用
+# （一）soul的入门使用
+
+## 目标
+ * 下载soul源码和编译
+ * 启动soul-admin
+ * 接入把springboot应用，接入soul-admin
+ * 响应式编程
+
 
 ## 下载soul源码和编译
 
@@ -151,7 +158,7 @@ spring:
 
 
 
-##  接入把springboot应用，加入soul-admin管理起来
+##  接入把springboot应用，接入soul-admin
 * 添加依赖
 ```
         <dependency>
