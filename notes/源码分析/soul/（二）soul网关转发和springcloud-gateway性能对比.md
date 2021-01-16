@@ -11,7 +11,7 @@
 * 启动soul-bootstrap，soul-admin及order-server都在本地起的话，不需要修改配置，直接启动
 * 启动两个order-server实例： 8097,8099
 > 第一个插件divide，选择器列表:order-serve 点击修改进去，能看到两个实例信息
-![divide.png](../png/divide.png "divide")
+![divide.png](../soul/png/divide.png "divide")
 * post请求地址：http://localhost:9195/order-service/order/gateway，响应body拿到order-servcer返回的数据，说明soul网关转发成功
 * 通过soul-bootstrap发起10次请求，如下是order-service业务服务日志，
 > 实例8099
@@ -56,7 +56,7 @@
 过来三四分钟刷新soul-admin页面，选择器列表：sb-demo-api的信息还在，没有剔除掉，先把问题记录，后续跟源码看为什么？
 
 ###   如下，我们可以针对某个接口配置各种负载均衡策略，控制颗粒很小，
-![](/png/divide.png)
+![divide-rule.png](../soul/png/divide-rule.png "divide-rule")
 
 
 ## soul-bootStrap和springcloud-gateway性能对比
