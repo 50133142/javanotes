@@ -168,7 +168,7 @@ spring:
         </dependency>
 ```
 * 添加配置
-> 注意：context-path和port要修改，不要soul-admin选择器列表找不到
+> 注意：context-path和port要修改，不然soul-admin的divide选择器列表找不到
 ```
 soul:
   # Soul 针对 SpringMVC 的配置项，对应 SoulHttpConfig 配置类

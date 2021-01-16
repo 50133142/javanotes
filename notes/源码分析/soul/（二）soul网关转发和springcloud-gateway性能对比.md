@@ -1,8 +1,8 @@
 # （二）soul网关转发和springcloud-gateway性能对比
 
 ## 目标
- * soul网关转发
- * soul-bootStrap和springcloud-gateway性能对比
+* soul网关转发
+* soul的divide插件和springcloud-gateway性能对比
 
 
 ## soul网关转发
@@ -59,13 +59,13 @@
 ![divide-rule.png](../soul/png/divide-rule.png "divide-rule")
 
 
-## soul-bootStrap和springcloud-gateway性能对比
+## soul的divide插件和springcloud-gateway性能对比
 环境：win10 16g   惠普
 压测工具：superbenchmarker
 启动两个服务：localhost:8098,localhost:8097 ，
 
 
-### soul-bootStrap 
+### soul的divide插件
 执行命令
 ```
 C:\Users\v-yanb07>sb -u http://localhost:9195/order-service/order/gateway -c 20  -N 60 -m post
