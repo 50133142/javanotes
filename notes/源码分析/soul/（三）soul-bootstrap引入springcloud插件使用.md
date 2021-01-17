@@ -4,23 +4,25 @@
 * 文章主题是如何将springCloud接口，快速接入到soul-bootstrap
 * springcloud插件和divide插件压测对比
 * springcloud插件压测的jvm数据
-* springcloud插件压测的jvm数据
+* soul-bootstrap日志都配置OFF测试性能
+
 
 
 ##  在soul-bootstrap的pom.xml添加依赖
 * 请在先soul-admin 后台将 springCloud 插件设置为开启
 ```
+
  <dependency>
       <groupId>org.dromara</groupId>
       <artifactId>soul-spring-boot-starter-plugin-springcloud</artifactId>
       <version>${project.version}</version>
   </dependency>
-
   <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-commons</artifactId>
       <version>2.2.0.RELEASE</version>
   </dependency>
+//ribbon负载均衡
   <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>
@@ -30,6 +32,7 @@
 ```
 * 这里我使用eureka作为注册和服务发现
 ```
+//eureka作为注册和服务发现
  <dependency>
      <groupId>org.springframework.cloud</groupId>
      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
@@ -128,6 +131,7 @@ C:\Users\v-yanb07>
 获得客户端发送请求的完整urlhttp://10.201.34.51:8099/order/gateway
 ```
 > 总结：目前我们没有配置任务负载策略，从日志看出我们10次请求都均衡的打到两个服务上去了，分析：soul在使用springcloud插件时默认使用轮训策略
+> 同时springcloud选择器没有找到配置某个接口的负载均衡策略
 
 
 ##  springcloud插件和divide插件压测对比
@@ -159,7 +163,7 @@ Avg: 2.6ms
 C:\Users\v-yanb07>
 ```
 > 上一篇文章(（二）soul网关转发和springcloud-gateway性能对比)的数据divide插件压测的RPS是：647，直连服务压测RPS：1518，本次springcloud的RPS是1435
-  springcloud结合eureka的性能明细优于divide插件，和直连服务性能快差不多了，问题记录：为什么springcloud插件优于divide插件，需要去具体的源码分析，
+  springcloud结合eureka的性能明显优于divide插件，和直连服务性能快差不多了，问题记录：为什么springcloud插件优于divide插件，需要去具体的源码分析，
 >
 ## springcloud插件压测的jvm数据
 > dos窗口执行 ：jvisualvm  
@@ -179,7 +183,8 @@ C:\Users\v-yanb07>
 >
 ###  线程耗时
 ![线程耗时.png](../soul/png/线程耗时.png "线程耗时")
-> soul-work-nio 四个线程占比最多
+> soul-work-threads线程数量最多  
+> soul-netty-ni0线程耗时最多  猜想这类线程应该是处理转发请求工作的
 
 ###  监视界面
 ![监视界面.png](../soul/png/监视界面.png "监视界面")
