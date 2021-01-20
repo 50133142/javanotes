@@ -142,7 +142,7 @@
 ``` 
 > 进到方法：saveSpringCloudMetaData
 > 1： 保存数据到meta_data表
-> ： spring发布事件eventPublisher.publishEvent  ，这里明天分析
+> 2： spring发布事件eventPublisher.publishEvent  ，这里明天分析
 
         // publish AppAuthData's event
         eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.META_DATA, DataEventTypeEnum.CREATE,
@@ -150,6 +150,8 @@
                 
 
 ## SpringCloudClientBeanPostProcessor的postProcessAfterInitialization方法怎么被调用的
+> 看下图，我们打个断点在postProcessAfterInitialization方法上，再一次看它的调用栈，我们需要从spring的初始化对象入手，深入底层
+![postProcessAfterInitialization.png.png](../soul/png/postProcessAfterInitialization.png.png "postProcessAfterInitialization.png")
 
 ### spring核心类AbstractApplicationContext的方法refresh,
 >refresh里面有13个带this方法  
@@ -191,28 +193,16 @@
 ###  this.finishBeanFactoryInitialization(beanFactory);  字面意思：完成初始化所有剩下的单实例bean
 > finishBeanFactoryInitialization：初始化SpringCloudClientBeanPostProcessor对象，
 >关键逻辑 
->>>>1：获取Bean的定义信息 
->>>>2：创建Bean实例 3
->>>>: Bean属性赋值  
->>>>4:如果实现BeanPostProcessor的postProcessBeforeInitialization，执行这个方法
->>>>5：步骤4有返回值，则执行postProcessAfterInitialization()
+*  1：获取Bean的定义信息 
+*  2：【获取当前Bean依赖的其他Bean;如果有按照getBean()把依赖的Bean先创建出来；】
+*  3：创建Bean实例  createBeanInstance(beanName, mbd, args)
+*  4: Bean属性赋值  populateBean(beanName, mbd, instanceWrapper); 
+*  5: Bean初始化   initializeBean(beanName, exposedObject, mbd);
+    *  1： wrappedBean = this.applyBeanPostProcessorsBeforeInitialization(bean, beanName);
+    *  2： this.invokeInitMethods(beanName, wrappedBean, mbd);
+    *  3： wrappedBean = this.applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+*  6：【执行Aware接口方法】invokeAwareMethods(beanName, bean);执行xxxAware接口的方法
+*  6：注册Bean的销毁方法
+*  7：将创建的Bean添加到缓存中singletonObjects，ioc容器就是这些Map；很多的Map里面保存了单实例Bean，环境信息
 
-``` Java
-    @Nullable
-    protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
-        Object bean = null;
-        if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
-            if (!mbd.isSynthetic() && this.hasInstantiationAwareBeanPostProcessors()) {
-                Class<?> targetType = this.determineTargetType(beanName, mbd);
-                if (targetType != null) {
-                    bean = this.applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
-                    if (bean != null) {
-                        bean = this.applyBeanPostProcessorsAfterInitialization(bean, beanName);
-                    }
-                }
-            }
-
-            mbd.beforeInstantiationResolved = bean != null;
-        }
-``` 
 
