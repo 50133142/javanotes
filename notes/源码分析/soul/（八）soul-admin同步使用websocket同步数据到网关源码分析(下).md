@@ -1,7 +1,8 @@
-# soul-admin同步到soul-bootstrap源码分析
+# soul-admin同步使用websocket同步数据到网关源码分析(下).md
 
 ##  目标
-* SoulClientController的内容
+> 第七小节主要分析了soul-admin通过websocket发送数据
+> 本小节主要分析soul-bootstrap怎么处理websocket发来的数据
 
 
 

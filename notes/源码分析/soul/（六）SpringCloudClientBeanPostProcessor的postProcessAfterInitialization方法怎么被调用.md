@@ -82,10 +82,11 @@
     this.populateBean(beanName, mbd, instanceWrapper);
 ``` 
 ###  5: Bean初始化   initializeBean(beanName, exposedObject, mbd)
-    *  1： wrappedBean = this.applyBeanPostProcessorsBeforeInitialization(bean, beanName);
-    *  2： this.invokeInitMethods(beanName, wrappedBean, mbd);
-    *  3： wrappedBean = this.applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+   *  1： wrappedBean = this.applyBeanPostProcessorsBeforeInitialization(bean, beanName);
+   *  2： this.invokeInitMethods(beanName, wrappedBean, mbd);
+   *  3： wrappedBean = this.applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
        (springCloudClientBeanPostProcessor的postProcessAfterInitialization方法就是在这里被调用的)
+       
 ``` Java
         Object wrappedBean = bean;
         if (mbd == null || !mbd.isSynthetic()) {
