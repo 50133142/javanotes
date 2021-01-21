@@ -8,7 +8,7 @@
 
 ## soul-sync-data-websocket包
 >如下图 
-![websocket.png](../soul/png/websocket.png "websocket")。
+![websocket.png](../soul/png/websocket.png "websocket")
 
 *  SoulWebsocketClient
 *  WebsocketConfig
@@ -100,7 +100,11 @@
 ``` 
      
 > CommonPluginDataSubscriber的subscribeDataHandler  
->  subscribeDataHandler方法是核心，明天需要详细跟踪下代码
+>  subscribeDataHandler方法是核心： 修改缓存 BaseDataCache： Optional.ofNullable(pluginData).ifPresent(data -> PLUGIN_MAP.put(data.getName(), data));
+> 根据插件名称，找到插件处理器 PluginDataHandler 处理选择器的更新数据 
+![handlePlugin.png](../soul/png/handlePlugin.png "handlePlugin")
+>
+>
 ``` Java
 
     private <T> void subscribeDataHandler(final T classData, final DataEventTypeEnum dataType) {
@@ -108,7 +112,9 @@
             if (data instanceof PluginData) {
                 PluginData pluginData = (PluginData) data;
                 if (dataType == DataEventTypeEnum.UPDATE) {
+                    // 修改缓存 BaseDataCache： Optional.ofNullable(pluginData).ifPresent(data -> PLUGIN_MAP.put(data.getName(), data));
                     BaseDataCache.getInstance().cachePluginData(pluginData);
+                    // 根据插件名称，找到插件处理器 PluginDataHandler 处理选择器的更新数据
                     Optional.ofNullable(handlerMap.get(pluginData.getName())).ifPresent(handler -> handler.handlerPlugin(pluginData));
                 } else if (dataType == DataEventTypeEnum.DELETE) {
                     BaseDataCache.getInstance().removePluginData(pluginData);
