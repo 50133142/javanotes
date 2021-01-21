@@ -5,9 +5,9 @@
 
 
 
-## 接着分析SpringCloudClientBeanPostProcessor的postProcessAfterInitialization方法怎么被调用的
+## 接着文章（五）分析SpringCloudClientBeanPostProcessor的postProcessAfterInitialization方法怎么被调用的  
 > 调用栈
-![postProcessAfterInitialization.png.png](../soul/png/postProcessAfterInitialization.png.png "postProcessAfterInitialization.png")
+![postProcessAfterInitialization.png](../soul/png/postProcessAfterInitialization.png "postProcessAfterInitialization")
 
 >关键逻辑 
 *  1：获取Bean的定义信息 
@@ -68,6 +68,14 @@
        instanceWrapper = this.createBeanInstance(beanName, mbd, args);
    }
 ``` 
+>继续createBeanInstance 方式继续执行：利用工厂方法或者对象的构造器创建出Bean实例 
+
+![beanFactory.png](../soul/png/beanFactory.png "beanFactory")
+
+
+>继续更调用栈走到下图的断点调用，这个时候：SpringCloudClientBeanPostProcessor就在这里被实例的，同时参数SoulSpringCloudConfig和Environment传递进来，
+
+![createBeanInstance.png](../soul/png/createBeanInstance.png "createBeanInstance")
 
 ###  4: Bean属性赋值  populateBean(beanName, mbd, instanceWrapper)
 ``` Java
