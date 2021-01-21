@@ -38,7 +38,12 @@
        eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.META_DATA, DataEventTypeEnum.CREATE,
                 Collections.singletonList(MetaDataTransfer.INSTANCE.mapToData(metaDataDO))));
 ``` 
-> 如下图：MetaDataController、PluginController、SelectorController、RuleController、SoulClientController的update和insert之后，
+> 如下图：
+>MetaDataController、
+>PluginController、
+>SelectorController、
+>RuleController、
+>SoulClientController的update和insert之后，
 >都会发送一个数据变更事件DataChangedEvent 事件，最终调用publishEvent方法，发布spring事件出去
 ![enent.png](../soul/png/enent.png "enent")。
 

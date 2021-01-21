@@ -6,16 +6,134 @@
 
 
 
-## SoulClientController的内容
+## soul-sync-data-websocket包
+>如下图 
+![websocket.png](../soul/png/websocket.png "websocket")。
 
-*  1：一共六个接口：springmvc-register，springcloud-register，springcloud-register，dubbo-register，sofa-register，tars-register
+*  SoulWebsocketClient
+*  WebsocketConfig
+*  DataHandler的实现类和抽象类
+*  WebsocketSyncDataService
     
-*  2：六个接口全部用于各个插件通过okhttp方式调用接口：
-    * 处理被代理服务器的注册信息新增到： meta_data表
-    * 通过发布spring事件把元数据刷新到soulbootstrap
+##  websocket接收发来的数据
+>交给websocketDataHandler执行
 
 ``` Java
-  RootBeanDefinition mbd = this.getMergedLocalBeanDefinition(beanName);
+    private void handleResult(final String result) {
+        WebsocketData websocketData = GsonUtils.getInstance().fromJson(result, WebsocketData.class);
+        ConfigGroupEnum groupEnum = ConfigGroupEnum.acquireByName(websocketData.getGroupType());
+        String eventType = websocketData.getEventType();
+        String json = GsonUtils.getInstance().toJson(websocketData.getData());
+        websocketDataHandler.executor(groupEnum, json, eventType);
+    }
+``` 
+## websocketDataHandler  
+> 默认的构造函数把DataHandler处理类存在EnumMap对象中
+``` Java
+    private static final EnumMap<ConfigGroupEnum, DataHandler> ENUM_MAP = new EnumMap<>(ConfigGroupEnum.class);
+
+    /**
+     * Instantiates a new Websocket data handler.
+     *
+     * @param pluginDataSubscriber the plugin data subscriber
+     * @param metaDataSubscribers  the meta data subscribers
+     * @param authDataSubscribers  the auth data subscribers
+     */
+    public WebsocketDataHandler(final PluginDataSubscriber pluginDataSubscriber,
+                                final List<MetaDataSubscriber> metaDataSubscribers,
+                                final List<AuthDataSubscriber> authDataSubscribers) {
+        ENUM_MAP.put(ConfigGroupEnum.PLUGIN, new PluginDataHandler(pluginDataSubscriber));
+        ENUM_MAP.put(ConfigGroupEnum.SELECTOR, new SelectorDataHandler(pluginDataSubscriber));
+        ENUM_MAP.put(ConfigGroupEnum.RULE, new RuleDataHandler(pluginDataSubscriber));
+        ENUM_MAP.put(ConfigGroupEnum.APP_AUTH, new AuthDataHandler(authDataSubscribers));
+        ENUM_MAP.put(ConfigGroupEnum.META_DATA, new MetaDataHandler(metaDataSubscribers));
+    }
+ 
+   //根据type具体哪个模板方法
+   public void executor(final ConfigGroupEnum type, final String json, final String eventType) {
+        ENUM_MAP.get(type).handle(json, eventType);
+    }
 ``` 
 
+## 使用模板设计模式 AbstractDataHandler类的方法：doRefresh，doUpdate，doDelete
+``` Java
+    public void handle(final String json, final String eventType) {
+        List<T> dataList = convert(json);
+        if (CollectionUtils.isNotEmpty(dataList)) {
+            DataEventTypeEnum eventTypeEnum = DataEventTypeEnum.acquireByName(eventType);
+            switch (eventTypeEnum) {
+                case REFRESH:
+                case MYSELF:
+                    doRefresh(dataList);
+                    break;
+                case UPDATE:
+                case CREATE:
+                    doUpdate(dataList);
+                    break;
+                case DELETE:
+                    doDelete(dataList);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+``` 
 
+## 这里我们分析：doUpdate(dataList)
+>SelectorDataHandler
+``` Java
+    @Override
+    protected void doUpdate(final List<SelectorData> dataList) {
+        dataList.forEach(pluginDataSubscriber::onSelectorSubscribe);
+    }
+``` 
+> pluginDataSubscriber::onSelectorSubscribe
+> CommonPluginDataSubscriber的onSelectorSubscribe
+
+``` Java
+
+  @Override
+     public void onSelectorSubscribe(final SelectorData selectorData) {
+         subscribeDataHandler(selectorData, DataEventTypeEnum.UPDATE);
+     }
+``` 
+     
+> CommonPluginDataSubscriber的subscribeDataHandler  
+>  subscribeDataHandler方法是核心，明天需要详细跟踪下代码
+``` Java
+
+    private <T> void subscribeDataHandler(final T classData, final DataEventTypeEnum dataType) {
+        Optional.ofNullable(classData).ifPresent(data -> {
+            if (data instanceof PluginData) {
+                PluginData pluginData = (PluginData) data;
+                if (dataType == DataEventTypeEnum.UPDATE) {
+                    BaseDataCache.getInstance().cachePluginData(pluginData);
+                    Optional.ofNullable(handlerMap.get(pluginData.getName())).ifPresent(handler -> handler.handlerPlugin(pluginData));
+                } else if (dataType == DataEventTypeEnum.DELETE) {
+                    BaseDataCache.getInstance().removePluginData(pluginData);
+                    Optional.ofNullable(handlerMap.get(pluginData.getName())).ifPresent(handler -> handler.removePlugin(pluginData));
+                }
+            } else if (data instanceof SelectorData) {
+                SelectorData selectorData = (SelectorData) data;
+                if (dataType == DataEventTypeEnum.UPDATE) {
+                    BaseDataCache.getInstance().cacheSelectData(selectorData);
+                    Optional.ofNullable(handlerMap.get(selectorData.getPluginName())).ifPresent(handler -> handler.handlerSelector(selectorData));
+                } else if (dataType == DataEventTypeEnum.DELETE) {
+                    BaseDataCache.getInstance().removeSelectData(selectorData);
+                    Optional.ofNullable(handlerMap.get(selectorData.getPluginName())).ifPresent(handler -> handler.removeSelector(selectorData));
+                }
+            } else if (data instanceof RuleData) {
+                RuleData ruleData = (RuleData) data;
+                if (dataType == DataEventTypeEnum.UPDATE) {
+                    BaseDataCache.getInstance().cacheRuleData(ruleData);
+                    Optional.ofNullable(handlerMap.get(ruleData.getPluginName())).ifPresent(handler -> handler.handlerRule(ruleData));
+                } else if (dataType == DataEventTypeEnum.DELETE) {
+                    BaseDataCache.getInstance().removeRuleData(ruleData);
+                    Optional.ofNullable(handlerMap.get(ruleData.getPluginName())).ifPresent(handler -> handler.removeRule(ruleData));
+                }
+            }
+        });
+    }
+
+``` 
