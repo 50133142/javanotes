@@ -4,8 +4,11 @@
 * SoulClientController的内容
 * WebsocketDataChangedListener分析
 
-> 分析下图soul框架图中红框的处理逻辑
+> 如下时soul整体架构图
 ![soul-数据同步.png](../soul/png/soul-数据同步.png "soul-数据同步")
+
+> 如下时soul-admin的数据同步流程图 
+![数据同步流程图.png](../soul/png/数据同步流程图.png "数据同步流程图")
 
 ## SoulClientController的内容
 
@@ -38,18 +41,19 @@
        eventPublisher.publishEvent(new DataChangedEvent(ConfigGroupEnum.META_DATA, DataEventTypeEnum.CREATE,
                 Collections.singletonList(MetaDataTransfer.INSTANCE.mapToData(metaDataDO))));
 ``` 
-> 如下图：
->MetaDataController、
->PluginController、
->SelectorController、
->RuleController、
->SoulClientController的update和insert之后，
->都会发送一个数据变更事件DataChangedEvent 事件，最终调用publishEvent方法，发布spring事件出去
+
+*  如下5个controller的update和insert之后最终发布DataChangedEvent 事件
+    * MetaDataController
+    * PluginController
+    * SelectorController
+    * RuleController
+    * SoulClientController，
+> 都会发送一个数据变更事件DataChangedEvent 事件，最终调用publishEvent方法，发布spring事件出去
 ![enent.png](../soul/png/enent.png "enent")。
 
 
 * 5: spring事件监具体处理代码
-> APP_AUTH 鉴权,PLUGIN 插件,RULE 规则,META_DATA 元数据都在onApplicationEvent方法接受各自spring事件的监听
+>使用了策略设计模式：通过event.getGroupKey()属性值处理不同ConfigGroupEnum，同时根据yml的配置信息（websocket，zookeeoer，necos）来调用的具体DataChangedListener： APP_AUTH 鉴权,PLUGIN 插件,RULE 规则,META_DATA 元数据都在onApplicationEvent方法接受各自spring事件的监听
   ``` Java  
         public void onApplicationEvent(final DataChangedEvent event) {
             for (DataChangedListener listener : listeners) {
@@ -86,7 +90,8 @@
 
 ## WebsocketDataChangedListener分析
 
-* soul-admin 开启websocket,在onApplicationEvent方法处理时就会调到WebsocketDataChangedListener类
+* soul-admin 开启websocket,在onApplicationEvent方法处理时就会调到WebsocketDataChangedListener类  
+、
 ``` Java  
 soul:
   database:
