@@ -49,11 +49,11 @@
     * RuleController
     * SoulClientController，
 > 都会发送一个数据变更事件DataChangedEvent 事件，最终调用publishEvent方法，发布spring事件出去
-![enent.png](../soul/png/enent.png "enent")。
+![enent.png](../soul/png/enent.png "enent")
 
 
 * 5: spring事件监具体处理代码
->使用了策略设计模式：通过event.getGroupKey()属性值处理不同ConfigGroupEnum，同时根据yml的配置信息（websocket，zookeeoer，necos）来调用的具体DataChangedListener： APP_AUTH 鉴权,PLUGIN 插件,RULE 规则,META_DATA 元数据都在onApplicationEvent方法接受各自spring事件的监听
+>使用了策略设计模式：通过event.getGroupKey()属性值配比ConfigGroupEnum，同时根据yml的配置信息（websocket，zookeeoer，necos）初始化的具体DataChangedListener，默认是：WebsocketDataChangedListener，： APP_AUTH 鉴权,PLUGIN 插件,RULE 规则,META_DATA 元数据都在onApplicationEvent方法接受各自spring事件的监听
   ``` Java  
         public void onApplicationEvent(final DataChangedEvent event) {
             for (DataChangedListener listener : listeners) {
@@ -81,7 +81,7 @@
 
 ``` 
 
-* 6: 接口DataChangedListener的实现类，有四个，如下图，今天我们分析：WebsocketDataChangedListener
+* 6: 事件监听接口DataChangedListener的实现类，有四个，如下图，今天我们分析默认的初始化事件监听实现类：WebsocketDataChangedListener
 >WebsocketDataChangedListener
 >HttpLongPollingDataChangedListener
 >NacosDataChangedListener

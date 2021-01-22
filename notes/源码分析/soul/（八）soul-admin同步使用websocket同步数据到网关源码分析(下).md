@@ -16,7 +16,7 @@
 *  WebsocketSyncDataService
     
 ##  websocket接收发来的数据
->交给websocketDataHandler执行
+>websocketDataHandler接收发来的消息onMessage，再传递到handleResult方法，
 
 ``` Java
     private void handleResult(final String result) {
@@ -28,7 +28,10 @@
     }
 ``` 
 ## websocketDataHandler  
-> 默认的构造函数把DataHandler处理类存在EnumMap对象中
+> 默认的构造函数把AbstractDataHandler继承类初始化存在EnumMap对象中
+*  AbstractDataHandler的继承类：PluginDataHandler 插件处理器，  SelectorDataHandler选择器处理器， RuleDataHandler 规则处理器，AuthDataHandler权限处理器 ，MetaDataHandler
+* ENUM_MAP.get(type).handle(json, eventType):根据ENUM_MAP类型去调用不同的处理器，
+
 ``` Java
     private static final EnumMap<ConfigGroupEnum, DataHandler> ENUM_MAP = new EnumMap<>(ConfigGroupEnum.class);
 
@@ -55,7 +58,10 @@
     }
 ``` 
 
-## 使用模板设计模式 AbstractDataHandler类的方法：doRefresh，doUpdate，doDelete
+## 接着上一步分析：我们走到AbstractDataHandler类的handler方法，由于AbstractDataHandlerdo是个抽象类，具体调用的它的继承类处理方式(doRefresh，doUpdate，doDelete),这里巧妙的使用模板设计模式 
+* doRefresh，缓存初始化或更新
+* doUpdate， 更新缓存或具体协议处理
+* doDelete   清空缓存
 ``` Java
     public void handle(final String json, final String eventType) {
         List<T> dataList = convert(json);
