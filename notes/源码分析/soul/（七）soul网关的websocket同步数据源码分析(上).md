@@ -95,7 +95,7 @@
 ## WebsocketDataChangedListener分析
 
 * soul-admin 开启websocket,在onApplicationEvent方法处理时就会调到WebsocketDataChangedListener类  
-、
+* DataSyncConfiguration的内部类根据相关配置初始化
 ```Java  
 soul:
   database:
@@ -104,6 +104,17 @@ soul:
   sync:
     websocket:
       enabled: true
+
+  ```
+```Java  
+
+    /**
+     * The WebsocketListener(default strategy).
+     */
+    @Configuration
+    @ConditionalOnProperty(name = "soul.sync.websocket.enabled", havingValue = "true", matchIfMissing = true)
+    @EnableConfigurationProperties(WebsocketSyncProperties.class)
+    static class WebsocketListener {
 
   ```
 * WebsocketDataChangedListener类

@@ -4,6 +4,27 @@
 > 第七小节主要分析了soul-admin通过websocket发送数据
 > 本小节主要分析soul-bootstrap怎么处理websocket发来的数据
 
+## soul-bootstrap的配置和初始化
+ ``` Java   
+soul :
+    file:
+      enabled: true
+    corss:
+      enabled: true
+    dubbo :
+      parameter: multi
+    sync:
+      http:
+        url : http://localhost:9095
+ ```
+>依赖
+ ``` Java   
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>soul-spring-boot-starter-sync-data-websocket</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+ ```
 
 
 ## soul-sync-data-websocket包
