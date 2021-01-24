@@ -7,7 +7,7 @@
 
 ## 接着文章（五）分析SpringCloudClientBeanPostProcessor的postProcessAfterInitialization方法怎么被调用的  
 > 调用栈
-![postProcessAfterInitialization.png](../soul/png/postProcessAfterInitialization.png "postProcessAfterInitialization")
+![postProcessAfterInitialization.png](png/数据同步/postProcessAfterInitialization.png "postProcessAfterInitialization")
 
 >关键逻辑 
 *  1：获取Bean的定义信息 
