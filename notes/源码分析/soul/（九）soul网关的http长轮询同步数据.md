@@ -4,7 +4,7 @@
 * soul-admin怎么开启http长轮训和初始化相应类
 * soul-bootstrap的配置和初始化
 * http怎么长时间轮询
-* soul-bootstrap请求admin的接口/configs/listener，具体做什么
+* soul-bootstrap请求admin的接口/configs/listener，具体做了什么
 
 
 
@@ -293,14 +293,14 @@ public class HttpSyncDataConfiguration {
 
  ```
 >在这里我们可能有问题， 每次一个发起请求configs/listener，难道在admin后世60s后才响应数据吗（响应内容：告知是哪个 Group 的数据发生了变更我们将插件、规则、选择器、权限、元数据数据分成不同的组），
->这里的60S才响应数据，应对 while (RUNNING.get())这里它就不会无限循环向admin发起请求
+>这里的60S才响应数据，应对 while (RUNNING.get())这里它就不会无限循环向admin发起请求，然后60s后继续发起 http 请求，反复同样的请求
 >60s还有疑惑问题：这样60s中间我们对admin操作很多配置信息，60s之后才响应，那网关在做代理转发时就严重滞后了，
 >上面的疑惑请看下面的分析
 
 * DataChangeTask核心类
 > admin在对插件、规则、流量配置、用户配置更变时都会发布spring事件eventPublisher.publishEvent，最终在DataChangedEventDispatcher的onApplicationEvent监听处理，
 >然后使用策略模式根据不同的类型处理不同的数据源,则我们来到HttpLongPollingDataChangedListener，下面贴了规则执行代码，其他插件、选择器、权限、元数据都类似
-```Java
+``` Java
     @Override
     protected void afterRuleChanged(final List<RuleData> changed, final DataEventTypeEnum eventType) {
         scheduler.execute(new DataChangeTask(ConfigGroupEnum.RULE));
@@ -347,3 +347,4 @@ public class HttpSyncDataConfiguration {
 ## 总结
 *  soul-admin和soul-bootstrap需要同时开始http配置，才会生效
 *  http长轮询同步: http的实现过程较为复杂，比较轻量，但是时效性低，其根据分组groupKey来拉取，如果数据量过大，过多，会有一定的影响。 也就是一个组groupKey下面的一个小地方更改，会拉取整个的组数据
+*  从第八小节我们知道websocket知道，admin 会推送一次全量数据，后续如果配置数据发生变更，对比http根据分组拉取数据相对来说优化了些
