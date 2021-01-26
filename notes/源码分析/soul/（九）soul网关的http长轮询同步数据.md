@@ -306,7 +306,7 @@ public class HttpSyncDataConfiguration {
         scheduler.execute(new DataChangeTask(ConfigGroupEnum.RULE));
     }
  ```
-> 如下是DataChangeTask类的核心代码
+> 如下是DataChangeTask类的核心代码：soul-admin发生了配置变更，挨个将队列中的请求移除，并予以响应
 >遍历所有在阻塞队列的请求，然后当前请求移除阻塞队列，把修改的配置组消息响应回去（configs/listener），在这里解疑了前面60s的问题，有变更，就不会阻塞了，里面响应回去，没有才会在admin阻塞60s
  ```Java   
     class DataChangeTask implements Runnable {
@@ -329,7 +329,7 @@ public class HttpSyncDataConfiguration {
         DataChangeTask(final ConfigGroupEnum groupKey) {
             this.groupKey = groupKey;
         }
-
+// soul-admin发生了配置变更，挨个将队列中的请求移除，并予以响应
         @Override
         public void run() {
             for (Iterator<LongPollingClient> iter = clients.iterator(); iter.hasNext();) {
