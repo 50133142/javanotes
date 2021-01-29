@@ -1,9 +1,8 @@
 # （（十三）sould的springcloud插件底层原理
 
 ##  目标
-* divide插件底层原理
+* springcloud插件底层原理
 *
-
 
 
 
@@ -12,7 +11,9 @@
 > 启动一个adminadmin和一个网关，两个order-service，一个eureka
 
 * 我们在SpringCloudPlugin的doExecute打断点
-> 从SoulWebHandler的execute， SoulWebHandler是插件链的处理器，依次按照order大小依次执行插件
+
+![postProcessAfterInitialization.png.png](../soul/png/postProcessAfterInitialization.png.png "postProcessAfterInitialization.png")
+> 从SoulWebHandler#execute， SoulWebHandler是插件链的处理器，依次按照order大小依次遍历插件列表执行
  ```Java   
          @Override
          public Mono<Void> execute(final ServerWebExchange exchange) {
@@ -30,9 +31,11 @@
          }
   ```
 >  plugins对象如下图
-
+![postProcessAfterInitialization.png.png](../soul/png/postProcessAfterInitialization.png.png "postProcessAfterInitialization.png")
+>
 > plugin.execute(exchange, this)执行来到，AbstractSoulPlugin的doExecute
->   if (pluginData != null && pluginData.getEnabled()) ：有疑问，这代码明天看下，
+> if (pluginData != null && pluginData.getEnabled()) ：如果对应插件没打开，则直接回到上面SoulWebHandler#execute，接着下一个插件处理器处理
+> 如果对应插件打开，则走doExecute(exchange, chain, selectorData, rule)，此处用到模板设计模式，具体实现在继承类
  ```Java   
    public Mono<Void> execute(final ServerWebExchange exchange, final SoulPluginChain chain) {
         String pluginName = named();
@@ -67,7 +70,7 @@
         return chain.execute(exchange);
     }
  ```
->  chain.execute(exchange)到cloud插件
+>  doExecute(exchange, chain, selectorData, rule)到springcloud插件
 > 1:exchange.getAttribute(Constants.CONTEXT):拿到我们的admin配置信息
 > 2：realURL真实请求业务实例的ip
 > loadBalancer.choose(selectorHandle.getServiceId())通过ribbon的负载均衡，来获取具体的哪个调用的实例ip信息
@@ -103,5 +106,10 @@
         return chain.execute(exchange);
     }
  ```
+
+## springcloud的插件探活
+* 我们依赖了包：spring-cloud-starter-netflix-eureka-client，服务的注册和发现，它探活完成使用eureka这套，交由eureke判断业务服务实例是否可用
+
+
 ## 总结
 *  今天下班太晚了，明天继续
