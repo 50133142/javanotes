@@ -1,4 +1,4 @@
-# （（十三）sould的springcloud插件底层原理
+# (十三）sould的springcloud插件底层原理
 
 ##  目标
 * springcloud插件底层原理
