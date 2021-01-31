@@ -41,9 +41,11 @@ Hystrix很早就不更新了，Spring官方已经出现了Netflix Hystrix的替�
 * 启动一个admin，一个soul-bootstrap，一个soulTtestHttp。三个服务
 
 * 在admin控制台找到插件列表的Resilience4j，自定义配置，如下图，
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210130070424520.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70#pic_center)
 
 
 
+> 阻塞问题了，Resilience4j和官网提供的文档配置属性不一致，一些数据对不上，
 * Resilience4j的配置规则详解（摘自官网）：
 
     * timeoutDurationRate：等待获取令牌的超时时间，单位ms，默认值：5000。
@@ -72,7 +74,40 @@ Hystrix很早就不更新了，Spring官方已经出现了Netflix Hystrix的替�
 
     * automaticTransitionFromOpenToHalfOpenEnabled：是否自动从open状态转换为half-open状态，,true：是，false：否，默认值：false。
     
-    
-    
+> 当我的Resilience4j配置如上图时 ，请求服务，会调用服务fallback接口  
+    ![在这里插入图片描述](https://img-blog.csdnimg.cn/20210130070530371.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
+
+> Resilience4J插件包的信息
+> Resilience4JPlugin核心源码
+ ```Java   
+    @Override
+    protected Mono<Void> doExecute(final ServerWebExchange exchange, final SoulPluginChain chain, final SelectorData selector, final RuleData rule) {
+        final SoulContext soulContext = exchange.getAttribute(Constants.CONTEXT);
+        assert soulContext != null;
+        Resilience4JHandle resilience4JHandle = GsonUtils.getGson().fromJson(rule.getHandle(), Resilience4JHandle.class);
+        if (resilience4JHandle.getCircuitEnable() == 1) {
+            return combined(exchange, chain, rule);
+        }
+        return rateLimiter(exchange, chain, rule);
+    }
+
+    private Mono<Void> rateLimiter(final ServerWebExchange exchange, final SoulPluginChain chain, final RuleData rule) {
+        return ratelimiterExecutor.run(
+                chain.execute(exchange), fallback(ratelimiterExecutor, exchange, null), Resilience4JBuilder.build(rule))
+                .onErrorResume(throwable -> ratelimiterExecutor.withoutFallback(exchange, throwable));
+    }
+
+    private Mono<Void> combined(final ServerWebExchange exchange, final SoulPluginChain chain, final RuleData rule) {
+        Resilience4JConf conf = Resilience4JBuilder.build(rule);
+        return combinedExecutor.run(
+                chain.execute(exchange).doOnSuccess(v -> {
+                    if (exchange.getResponse().getStatusCode() != HttpStatus.OK) {
+                        HttpStatus status = exchange.getResponse().getStatusCode();
+                        exchange.getResponse().setStatusCode(null);
+                        throw new CircuitBreakerStatusCodeException(status);
+                    }
+                }), fallback(combinedExecutor, exchange, conf.getFallBackUri()), conf);
+    }
+  ```
 ## 总结
-* 
+*  还需要补充Resilience4j怎么使用
