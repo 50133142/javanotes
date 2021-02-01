@@ -94,8 +94,9 @@
     </dependencies>
  ```
 
-* AroundLogPlugin具体实现
+* 创建AroundLogPlugin具体实现
 > 执行execute方法，把时间设置到上下文中，然后打印开始日志，然后通过Mono.then方法，打印结束日志，通过exchange上下文统计链路执行耗时。
+> .then：是在其他责任链都执行完后，才会执行操作
  ```Java   
    @Override
     public String named() {
@@ -121,7 +122,73 @@
     public int getOrder() {
     }
  ```
+##  新增项目soul-spring-boot-starter-plugin-around-log
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210201223243729.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
+* 依赖如下
+ ```Java   
+  <dependencies>
+        <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>soul-plugin-around-log</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+    </dependencies>
+ ```
+* 新增类AroundLogPluginConfiguration，初始化AroundLogPlugin，加入到是spring容器中
+>注意：@ConditionalOnClass(AroundLogPlugin.class) 要加上，不然插件不能初始化，
+>@ConditionalOnClass ： classpath中存在该类时起效
+ ```Java   
+@Configuration
+@ConditionalOnClass(AroundLogPlugin.class)
+public class AroundLogPluginConfiguration {
+    
+    /**
+     * Waf plugin soul plugin.
+     *
+     * @return the soul plugin
+     */
+    @Bean
+    public SoulPlugin aroundLogPlugin() {
+        return new AroundLogPlugin();
+    }
+}
+ ```
+
+* Spring Cloud常用的注解的含义
+> 执行顺序
+> @AutoConfigureAfter：在指定的配置类初始化后再加载
+> @AutoConfigureBefore：在指定的配置类初始化前加载
+> @AutoConfigureOrder：数越小越先初始化
+> 条件配置
+> @ConditionalOnClass ： classpath中存在该类时起效
+> @ConditionalOnMissingClass ： classpath中不存在该类时起效
+> @ConditionalOnBean ： DI容器(控制反转（IoC）容器)中存在该类型Bean时起效
+> @ConditionalOnMissingBean ： DI容器中不存在该类型Bean时起效
+> @ConditionalOnSingleCandidate ： DI容器中该类型Bean只有一个或@Primary的只有一个时起效
+> @ConditionalOnExpression ： SpEL表达式结果为true时
+> @ConditionalOnProperty ： 参数设置或者值一致时起效
+> @ConditionalOnResource ： 指定的文件存在时起效
+> @ConditionalOnJndi ： 指定的JNDI存在时起效
+> @ConditionalOnJava ： 指定的Java版本存在时起效
+> @ConditionalOnWebApplication ： Web应用环境下起效
+> @ConditionalOnNotWebApplication ： 非Web应用环境下起效
 
 
+
+## 在soulbootstrap添加依赖
+ ```Java   
+     <dependency>
+            <groupId>org.dromara</groupId>
+            <artifactId>soul-spring-boot-starter-plugin-around-log</artifactId>
+            <version>${project.version}</version>
+     </dependency>
+ ```
+## 测试日志如下图
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210201225121577.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
+  
 ## 总结
 *  
