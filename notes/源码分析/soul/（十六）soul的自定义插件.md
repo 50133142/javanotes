@@ -117,8 +117,8 @@
     }
 
     @Override
-    public int getOrder() {
         return PluginEnum.AROUNDLOG.getCode();
+    public int getOrder() {
     }
  ```
 
