@@ -1,4 +1,4 @@
-# （十七）soul的spi
+# （十七）soul的spi使用
 
 ##  目标
 * spi是什么
@@ -20,7 +20,8 @@
     * 调用方通过ServiceLoader.load方法加载接口的实现类实例
     
 ## soul中spi的运用    
-
+> soulde的spi机制一样，但是对原生的spi做了增强，
+>1：增加了缓存机制，2；使用的时候才去创建  3：减少遍历
 ### DividePlugin#doExecute核心方法
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20210202073212539.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
 
@@ -38,16 +39,88 @@
         return loadBalance.select(upstreamList, ip);
     }
  ```
+* LoadBalance有三个子类实现有:
+    * HashLoadBalance
+    * RandomLoadBalance
+    * RoundRobinLoadBalance
 
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210202224959427.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
 
+* 如下图，基本都是按照官方提供的脑图步骤实现的
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210202225443561.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
 
+* soul-spi有哪些类
+>ExtensionLoader及对应ServiceLoader，他是扩展的加载器，自己定义了 SPI 资源文件的路径位置：  private static final String SOUL_DIRECTORY = "META-INF/soul/";
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210203064034855.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
 
+ ```Java   
+
+    private static final String SOUL_DIRECTORY = "META-INF/soul/";
+
+//第一层缓存, 它是我们搜索接口的具体实现类时最先接触到的, 如果命中它则直接可以得到实现类的对象 key是random，roundRobin，hash
+    private static final Map<Class<?>, ExtensionLoader<?>> LOADERS = new ConcurrentHashMap<>();
+//对象LoadBalance
+    private final Class<T> clazz;
+//cachedClasses 存放的是 标识(random) 与 类对象 的映射
+    private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
+//joinInstances 缓存存放的是 类对象与对象实例 的映射
+    private final Map<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
+
+    private final Map<Class<?>, Object> joinInstances = new ConcurrentHashMap<>();
+ ```
+* 核心代码
+>重要是这个方法去加载资源的
+>properties
+ ```Java   
+
+    private void loadResources(final Map<String, Class<?>> classes, final URL url) throws IOException {
+        try (InputStream inputStream = url.openStream()) {
+            Properties properties = new Properties();
+            properties.load(inputStream);
+            properties.forEach((k, v) -> {
+                String name = (String) k;
+                String classPath = (String) v;
+                if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(classPath)) {
+                    try {
+                        loadClass(classes, name, classPath);
+                    } catch (ClassNotFoundException e) {
+                        throw new IllegalStateException("load extension resources error", e);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            throw new IllegalStateException("load extension resources error", e);
+        }
+    }
+
+ ```
+
+ ``` java
+    private void loadClass(final Map<String, Class<?>> classes,
+                           final String name, final String classPath) throws ClassNotFoundException {
+        Class<?> subClass = Class.forName(classPath);
+        if (!clazz.isAssignableFrom(subClass)) {
+            throw new IllegalStateException("load extension resources error," + subClass + " subtype is not of " + clazz);
+        }
+        Join annotation = subClass.getAnnotation(Join.class);
+        if (annotation == null) {
+            throw new IllegalStateException("load extension resources error," + subClass + " with Join annotation");
+        }
+        Class<?> oldClass = classes.get(name);
+        if (oldClass == null) {
+            classes.put(name, subClass);
+        } else if (oldClass != subClass) {
+            throw new IllegalStateException("load extension resources error,Duplicate class " + clazz.getName() + " name " + name + " on " + oldClass.getName() + " or " + subClass.getName());
+        }
+    }
+
+ ```
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210203072414651.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM3ODY5MjQz,size_16,color_FFFFFF,t_70)
 ### 优缺点
 * 优点：使用Java SPI机制的优势是实现了解耦，使第三方模块的装配逻辑与业务代码分离。应用程序可以根据实际业务情况使用新的框架拓展或者替换原有组件。
     
 * 缺点：ServiceLoader在加载实现类的时候会全部加载并实例化，假如不想使用某些实现类，它也会被加载示例化的，这就造成了浪费。另外获取某个实现类只能通过迭代器迭代获取，不能根据某个参数来获取，使用方式上不够灵活。
     
-* Dubbo框架中大量使用了SPI来进行框架扩展，但它是重新对SPI进行了实现，完美的解决上面提到的问题。
+* Dubbo框架中大量使用了SPI来进行框架扩展，但soul是重新对SPI进行了实现，完美的解决上面提到的问题。
 
-## 总结
-*  
+
