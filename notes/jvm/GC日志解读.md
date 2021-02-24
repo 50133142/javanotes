@@ -78,7 +78,8 @@ public class GCLogAnalysis {
 >D:\F盘\JavaCourseCodes\01jvm>javac -encoding UTF-8 GCLogAnalysis.java
 *  执行GCLogAnalysis文件，打印的GC日志生产到当前目录下demo.log
 >D:\F盘\JavaCourseCodes\01jvm>java -Xloggc:gc.demo.log -XX:+PrintGCDetails -XX:+PrintGCDateStamps
-> -XX:MaxHeapSize=4244185088,如果没有设置最大堆内存，默认是服务器的最大内存的1/4大小 ，默认采用UseParallelGC 并行GC
+> -XX:MaxHeapSize=4244185088,如果没有设置最大堆内存，默认是服务器的最大内存的1/4大小 ，
+>默认采用UseParallelGC 并行GC:，默认的并行GC线程设置为: 72(服务器核数)* 5/8 + 3 = 48 个，
 ```log
 Java HotSpot(TM) 64-Bit Server VM (25.201-b09) for windows-amd64 JRE (1.8.0_201-b09), built on Dec 15 2018 18:36:39 by "java_re" with MS VC++ 10.0 (VS2010)
 Memory: 4k page, physical 16578848k(2260340k free), swap 30350536k(4206764k free)
